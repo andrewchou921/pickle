@@ -1,0 +1,206 @@
+
+<style>
+  .pb-root { padding: 1.5rem 1rem; font-family: var(--font-sans); }
+  .team-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; flex: 1; min-width: 0; text-align: center; }
+  .team-name-input { font-size: 15px; font-weight: 500; background: transparent; border: none; border-bottom: 1px solid var(--color-border-secondary); color: var(--color-text-primary); text-align: center; width: 100%; outline: none; padding: 2px 4px; margin-bottom: 1rem; }
+  .score-display { font-size: 72px; font-weight: 500; line-height: 1; color: var(--color-text-primary); margin: 0.5rem 0; }
+  .score-btn { width: 44px; height: 44px; border-radius: 50%; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 22px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .score-btn:active { transform: scale(0.93); }
+  .score-btn.plus { background: #185FA5; border-color: #185FA5; color: #fff; }
+  .score-btn.plus:hover { background: #0C447C; }
+  .info-row { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap; }
+  .info-chip { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 14px; font-size: 13px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
+  .info-chip select { background: transparent; border: none; color: var(--color-text-primary); font-size: 13px; cursor: pointer; outline: none; }
+  .serving-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .serving-dot.active { background: #E24B4A; }
+  .serving-dot.inactive { background: var(--color-border-secondary); }
+  .status-bar { text-align: center; font-size: 14px; color: var(--color-text-secondary); margin: 0.75rem 0; min-height: 22px; }
+  .winner-banner { background: #E6F1FB; border: 0.5px solid #B5D4F4; border-radius: var(--border-radius-md); padding: 0.75rem 1.25rem; text-align: center; font-size: 16px; font-weight: 500; color: #0C447C; display: none; margin: 0.5rem 0; }
+  .ctrl-row { display: flex; justify-content: center; gap: 10px; margin-top: 1.25rem; flex-wrap: wrap; }
+  .ctrl-btn { padding: 8px 18px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 13px; cursor: pointer; }
+  .ctrl-btn:hover { background: var(--color-background-tertiary); }
+  .ctrl-btn.danger { border-color: #E24B4A; color: #A32D2D; }
+  .log-area { margin-top: 1.5rem; border-top: 0.5px solid var(--color-border-tertiary); padding-top: 1rem; }
+  .log-title { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 0.5rem; }
+  .log-list { list-style: none; padding: 0; margin: 0; max-height: 130px; overflow-y: auto; }
+  .log-list li { font-size: 12px; color: var(--color-text-secondary); padding: 3px 0; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; }
+  .log-list li:last-child { border-bottom: none; }
+  .server-tag { font-size: 11px; background: #FCEBEB; color: #A32D2D; border-radius: 4px; padding: 1px 6px; }
+</style>
+
+<div class="pb-root">
+  <h2 class="sr-only">匹克球計分表 — 追蹤雙方得分、發球權與比賽局數</h2>
+
+  <div class="info-row">
+    <div class="info-chip"><i class="ti ti-trophy" aria-hidden="true"></i>制勝分：<select id="winScore"><option value="11">11分</option><option value="15">15分</option><option value="21">21分</option></select></div>
+    <div class="info-chip"><i class="ti ti-chart-bar" aria-hidden="true"></i>第 <span id="gameNum">1</span> 局 / 共 <select id="totalGames"><option value="1">1</option><option value="3">3</option><option value="5">5</option></select> 局</div>
+    <div class="info-chip"><i class="ti ti-ball-tennis" aria-hidden="true"></i>發球方：<span id="serverLabel" style="color:var(--color-text-primary);font-weight:500;">—</span></div>
+  </div>
+
+  <div id="winnerBanner" class="winner-banner"></div>
+
+  <div style="display:flex;gap:12px;margin:0.75rem 0;">
+    <div class="team-card" id="cardA">
+      <input class="team-name-input" id="nameA" value="隊伍 A" maxlength="12" />
+      <span class="serving-dot" id="dotA"></span>
+      <div class="score-display" id="scoreA">0</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="score-btn" onclick="changeScore('A',-1)" aria-label="隊伍A減分">−</button>
+        <button class="score-btn plus" onclick="changeScore('A',1)" aria-label="隊伍A加分">+</button>
+      </div>
+    </div>
+    <div class="team-card" id="cardB">
+      <input class="team-name-input" id="nameB" value="隊伍 B" maxlength="12" />
+      <span class="serving-dot" id="dotB"></span>
+      <div class="score-display" id="scoreB">0</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="score-btn" onclick="changeScore('B',-1)" aria-label="隊伍B減分">−</button>
+        <button class="score-btn plus" onclick="changeScore('B',1)" aria-label="隊伍B加分">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">點擊 + 開始計分</div>
+
+  <div style="text-align:center;margin-bottom:0.5rem;">
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;">發球權歸</div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="ctrl-btn" onclick="setServer('A')">→ 隊伍 A 發球</button>
+      <button class="ctrl-btn" onclick="setServer('B')">→ 隊伍 B 發球</button>
+    </div>
+  </div>
+
+  <div class="ctrl-row">
+    <button class="ctrl-btn" onclick="nextGame()"><i class="ti ti-arrow-right" aria-hidden="true"></i> 下一局</button>
+    <button class="ctrl-btn danger" onclick="resetAll()"><i class="ti ti-refresh" aria-hidden="true"></i> 重置全場</button>
+  </div>
+
+  <div class="log-area">
+    <div class="log-title"><i class="ti ti-list" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>得分紀錄</div>
+    <ul class="log-list" id="logList"><li style="color:var(--color-text-secondary);font-size:12px;padding:4px 0;">尚無紀錄</li></ul>
+  </div>
+</div>
+
+<script>
+let scores = {A: 0, B: 0};
+let server = null;
+let gameNum = 1;
+let gamesWon = {A: 0, B: 0};
+let gameOver = false;
+let log = [];
+
+function getWin() { return parseInt(document.getElementById('winScore').value); }
+function getTotalGames() { return parseInt(document.getElementById('totalGames').value); }
+function nameOf(t) { return document.getElementById('name'+t).value || '隊伍 '+t; }
+
+function updateUI() {
+  document.getElementById('scoreA').textContent = scores.A;
+  document.getElementById('scoreB').textContent = scores.B;
+  document.getElementById('dotA').className = 'serving-dot ' + (server==='A'?'active':'inactive');
+  document.getElementById('dotB').className = 'serving-dot ' + (server==='B'?'active':'inactive');
+  document.getElementById('serverLabel').textContent = server ? nameOf(server) : '—';
+  document.getElementById('gameNum').textContent = gameNum;
+
+  let win = getWin(); let total = getTotalGames();
+  let status = '';
+  if (!gameOver) {
+    if (server) {
+      let sName = nameOf(server);
+      status = sName + ' 發球中';
+    }
+    let needLead = (scores.A >= win-1 && scores.B >= win-1) ? 2 : 0;
+    if (needLead > 0) status = '平手！需領先 2 分勝局';
+  }
+  document.getElementById('statusBar').textContent = status;
+
+  let banner = document.getElementById('winnerBanner');
+  if (gameOver) {
+    let leader = gamesWon.A > gamesWon.B ? 'A' : 'B';
+    let needed = Math.ceil(total/2);
+    if (gamesWon[leader] >= needed) {
+      banner.style.display = 'block';
+      banner.textContent = '🏆 ' + nameOf(leader) + ' 贏得比賽！（' + gamesWon.A + ' : ' + gamesWon.B + ' 局）';
+    } else {
+      banner.style.display = 'none';
+    }
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function checkWin() {
+  let win = getWin(); let total = getTotalGames();
+  let aWon = scores.A >= win && (scores.A - scores.B) >= 2;
+  let bWon = scores.B >= win && (scores.B - scores.A) >= 2;
+  if (aWon || bWon) {
+    let winner = aWon ? 'A' : 'B';
+    gamesWon[winner]++;
+    let needed = Math.ceil(total/2);
+    let matchWon = gamesWon[winner] >= needed;
+    let msg = nameOf(winner) + ' 贏得第 '+gameNum+' 局' + (matchWon ? '，贏得比賽！' : '');
+    addLog(msg, true);
+    gameOver = true;
+    if (matchWon) {
+      document.getElementById('winnerBanner').style.display = 'block';
+      document.getElementById('winnerBanner').textContent = '🏆 ' + nameOf(winner) + ' 贏得比賽！（' + gamesWon.A + ' : ' + gamesWon.B + ' 局）';
+    }
+    return true;
+  }
+  return false;
+}
+
+function changeScore(team, delta) {
+  if (gameOver) return;
+  let newVal = scores[team] + delta;
+  if (newVal < 0) return;
+  scores[team] = newVal;
+  if (delta > 0) {
+    addLog(nameOf(team) + ' 得分 → ' + scores.A + ' : ' + scores.B);
+  }
+  checkWin();
+  updateUI();
+}
+
+function setServer(team) {
+  server = team;
+  updateUI();
+}
+
+function addLog(msg, highlight) {
+  log.unshift({msg, highlight});
+  let ul = document.getElementById('logList');
+  ul.innerHTML = '';
+  if (log.length === 0) { ul.innerHTML = '<li>尚無紀錄</li>'; return; }
+  log.slice(0,30).forEach(e => {
+    let li = document.createElement('li');
+    li.style.color = e.highlight ? '#0C447C' : '';
+    li.style.fontWeight = e.highlight ? '500' : '';
+    li.innerHTML = '<span>' + e.msg + '</span>';
+    ul.appendChild(li);
+  });
+}
+
+function nextGame() {
+  if (gamesWon.A + gamesWon.B >= getTotalGames()) return;
+  scores = {A:0, B:0};
+  gameNum++;
+  gameOver = false;
+  server = null;
+  addLog('--- 第 '+gameNum+' 局開始 ---', false);
+  updateUI();
+}
+
+function resetAll() {
+  scores = {A:0, B:0};
+  gamesWon = {A:0, B:0};
+  server = null;
+  gameNum = 1;
+  gameOver = false;
+  log = [];
+  document.getElementById('winnerBanner').style.display = 'none';
+  document.getElementById('logList').innerHTML = '<li style="color:var(--color-text-secondary);font-size:12px;padding:4px 0;">尚無紀錄</li>';
+  updateUI();
+}
+
+updateUI();
+</script>
