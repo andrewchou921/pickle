@@ -1,206 +1,576 @@
 
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>匹克球計分</title>
 <style>
-  .pb-root { padding: 1.5rem 1rem; font-family: var(--font-sans); }
-  .team-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; flex: 1; min-width: 0; text-align: center; }
-  .team-name-input { font-size: 15px; font-weight: 500; background: transparent; border: none; border-bottom: 1px solid var(--color-border-secondary); color: var(--color-text-primary); text-align: center; width: 100%; outline: none; padding: 2px 4px; margin-bottom: 1rem; }
-  .score-display { font-size: 72px; font-weight: 500; line-height: 1; color: var(--color-text-primary); margin: 0.5rem 0; }
-  .score-btn { width: 44px; height: 44px; border-radius: 50%; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 22px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .score-btn:active { transform: scale(0.93); }
-  .score-btn.plus { background: #185FA5; border-color: #185FA5; color: #fff; }
-  .score-btn.plus:hover { background: #0C447C; }
-  .info-row { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap; }
-  .info-chip { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 14px; font-size: 13px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
-  .info-chip select { background: transparent; border: none; color: var(--color-text-primary); font-size: 13px; cursor: pointer; outline: none; }
-  .serving-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .serving-dot.active { background: #E24B4A; }
-  .serving-dot.inactive { background: var(--color-border-secondary); }
-  .status-bar { text-align: center; font-size: 14px; color: var(--color-text-secondary); margin: 0.75rem 0; min-height: 22px; }
-  .winner-banner { background: #E6F1FB; border: 0.5px solid #B5D4F4; border-radius: var(--border-radius-md); padding: 0.75rem 1.25rem; text-align: center; font-size: 16px; font-weight: 500; color: #0C447C; display: none; margin: 0.5rem 0; }
-  .ctrl-row { display: flex; justify-content: center; gap: 10px; margin-top: 1.25rem; flex-wrap: wrap; }
-  .ctrl-btn { padding: 8px 18px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 13px; cursor: pointer; }
-  .ctrl-btn:hover { background: var(--color-background-tertiary); }
-  .ctrl-btn.danger { border-color: #E24B4A; color: #A32D2D; }
-  .log-area { margin-top: 1.5rem; border-top: 0.5px solid var(--color-border-tertiary); padding-top: 1rem; }
-  .log-title { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 0.5rem; }
-  .log-list { list-style: none; padding: 0; margin: 0; max-height: 130px; overflow-y: auto; }
-  .log-list li { font-size: 12px; color: var(--color-text-secondary); padding: 3px 0; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; }
-  .log-list li:last-child { border-bottom: none; }
-  .server-tag { font-size: 11px; background: #FCEBEB; color: #A32D2D; border-radius: 4px; padding: 1px 6px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --navy: #0f2d5a;
+    --blue: #1a4d8f;
+    --accent: #e84c3d;
+    --bg: #f0f4fa;
+    --card: #ffffff;
+    --text: #0f1c2e;
+    --muted: #6b7f99;
+    --border: #d0dbe8;
+    --green: #1e8a5e;
+  }
+
+  body {
+    font-family: -apple-system, "Noto Sans TC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: .5px; }
+  .header-meta { font-size: 12px; color: #8baacf; }
+
+  .meta-bar {
+    background: var(--blue);
+    color: #c8d9ef;
+    font-size: 13px;
+    padding: 8px 16px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .meta-bar select {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    border-radius: 6px;
+    padding: 3px 6px;
+    cursor: pointer;
+  }
+
+  main { padding: 12px 12px 100px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ── Game card ── */
+  .game-card {
+    background: var(--card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  }
+  .game-header {
+    background: var(--blue);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .game-badge {
+    font-size: 11px;
+    background: rgba(255,255,255,.18);
+    border-radius: 20px;
+    padding: 2px 10px;
+  }
+
+  /* ── Score row ── */
+  .score-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    min-height: 130px;
+  }
+
+  .team-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 8px 10px;
+    gap: 6px;
+    position: relative;
+  }
+  .team-block.serving::before {
+    content: "🟡 發球";
+    position: absolute;
+    top: 6px;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .team-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: .3px;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--border);
+    padding: 1px 4px;
+    text-align: center;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .big-score {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--navy);
+    letter-spacing: -2px;
+  }
+  .team-block.winning .big-score { color: var(--green); }
+
+  .score-btns { display: flex; gap: 8px; margin-top: 2px; }
+  .btn-score {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: none;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .1s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .btn-score:active { transform: scale(.88); }
+  .btn-plus { background: var(--navy); color: #fff; }
+  .btn-minus { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+  .vs-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    gap: 6px;
+  }
+  .vs-text { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .colon { font-size: 36px; font-weight: 800; color: var(--border); line-height: 1; }
+
+  /* ── Serve selector ── */
+  .serve-row {
+    border-top: 1px solid var(--bg);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .serve-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .serve-btns { display: flex; gap: 6px; flex: 1; }
+  .btn-serve {
+    flex: 1;
+    padding: 6px 4px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .btn-serve.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Win banner ── */
+  .win-banner {
+    display: none;
+    background: linear-gradient(90deg, #1e8a5e 0%, #27b57a 100%);
+    color: #fff;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 10px;
+    letter-spacing: .3px;
+  }
+  .win-banner.show { display: block; }
+
+  /* ── Summary ── */
+  .summary-card {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 16px;
+    color: #fff;
+  }
+  .summary-title { font-size: 13px; color: #8baacf; margin-bottom: 10px; font-weight: 600; }
+  .summary-row { display: flex; justify-content: space-around; }
+  .summary-team { text-align: center; }
+  .summary-team-name { font-size: 12px; color: #8baacf; margin-bottom: 4px; }
+  .summary-wins { font-size: 40px; font-weight: 800; color: #fff; }
+  .summary-vs { font-size: 20px; color: #3a5a8a; align-self: center; font-weight: 700; }
+  .match-winner {
+    margin-top: 12px;
+    background: var(--green);
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    display: none;
+  }
+  .match-winner.show { display: block; }
+
+  /* ── Log ── */
+  .log-card {
+    background: var(--card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  }
+  .log-head {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid var(--bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .log-clear { font-size: 11px; color: var(--accent); cursor: pointer; }
+  .log-list { max-height: 180px; overflow-y: auto; }
+  .log-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 14px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--bg);
+    color: var(--text);
+  }
+  .log-item:last-child { border-bottom: none; }
+  .log-item.highlight { color: var(--green); font-weight: 600; background: #f0faf5; }
+  .log-time { color: var(--muted); font-size: 11px; }
+  .log-empty { padding: 16px 14px; font-size: 12px; color: var(--muted); text-align: center; }
+
+  /* ── Bottom bar ── */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+  }
+  .btn-action {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .1s;
+  }
+  .btn-action:active { transform: scale(.96); }
+  .btn-next { background: var(--navy); color: #fff; }
+  .btn-reset { background: var(--bg); color: var(--accent); border: 1.5px solid var(--accent); }
+
+  /* ── Name edit overlay ── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .overlay-box {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px 20px;
+    width: min(320px, 90vw);
+  }
+  .overlay-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--navy); }
+  .overlay-input {
+    width: 100%; padding: 12px; font-size: 18px; font-weight: 700;
+    border: 2px solid var(--blue); border-radius: 10px; outline: none;
+    color: var(--navy); text-align: center;
+  }
+  .overlay-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .overlay-btn {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .overlay-ok { background: var(--navy); color: #fff; }
+  .overlay-cancel { background: var(--bg); color: var(--muted); }
 </style>
+</head>
+<body>
 
-<div class="pb-root">
-  <h2 class="sr-only">匹克球計分表 — 追蹤雙方得分、發球權與比賽局數</h2>
+<header>
+  <h1>🏓 匹克球計分</h1>
+  <span class="header-meta" id="matchStatus">進行中</span>
+</header>
 
-  <div class="info-row">
-    <div class="info-chip"><i class="ti ti-trophy" aria-hidden="true"></i>制勝分：<select id="winScore"><option value="11">11分</option><option value="15">15分</option><option value="21">21分</option></select></div>
-    <div class="info-chip"><i class="ti ti-chart-bar" aria-hidden="true"></i>第 <span id="gameNum">1</span> 局 / 共 <select id="totalGames"><option value="1">1</option><option value="3">3</option><option value="5">5</option></select> 局</div>
-    <div class="info-chip"><i class="ti ti-ball-tennis" aria-hidden="true"></i>發球方：<span id="serverLabel" style="color:var(--color-text-primary);font-weight:500;">—</span></div>
-  </div>
+<div class="meta-bar">
+  <span>制勝分：</span>
+  <select id="winScore" onchange="checkAllWins()">
+    <option value="11">11 分</option>
+    <option value="15">15 分</option>
+    <option value="21">21 分</option>
+  </select>
+  <span style="margin-left:8px">總局數：</span>
+  <select id="totalGames">
+    <option value="2" selected>2 局</option>
+    <option value="3">3 局</option>
+    <option value="5">5 局</option>
+  </select>
+</div>
 
-  <div id="winnerBanner" class="winner-banner"></div>
+<main id="gamesContainer"></main>
 
-  <div style="display:flex;gap:12px;margin:0.75rem 0;">
-    <div class="team-card" id="cardA">
-      <input class="team-name-input" id="nameA" value="隊伍 A" maxlength="12" />
-      <span class="serving-dot" id="dotA"></span>
-      <div class="score-display" id="scoreA">0</div>
-      <div style="display:flex;gap:8px;justify-content:center;">
-        <button class="score-btn" onclick="changeScore('A',-1)" aria-label="隊伍A減分">−</button>
-        <button class="score-btn plus" onclick="changeScore('A',1)" aria-label="隊伍A加分">+</button>
-      </div>
+<div class="bottom-bar">
+  <button class="btn-action btn-reset" onclick="confirmReset()">重置全場</button>
+  <button class="btn-action btn-next" id="btnNext" onclick="nextGame()">下一局 →</button>
+</div>
+
+<!-- name edit overlay -->
+<div class="overlay" id="nameOverlay">
+  <div class="overlay-box">
+    <div class="overlay-title" id="overlayTitle">修改隊名</div>
+    <input class="overlay-input" id="overlayInput" maxlength="10" />
+    <div class="overlay-btns">
+      <button class="overlay-btn overlay-cancel" onclick="closeOverlay()">取消</button>
+      <button class="overlay-btn overlay-ok" onclick="saveOverlay()">確認</button>
     </div>
-    <div class="team-card" id="cardB">
-      <input class="team-name-input" id="nameB" value="隊伍 B" maxlength="12" />
-      <span class="serving-dot" id="dotB"></span>
-      <div class="score-display" id="scoreB">0</div>
-      <div style="display:flex;gap:8px;justify-content:center;">
-        <button class="score-btn" onclick="changeScore('B',-1)" aria-label="隊伍B減分">−</button>
-        <button class="score-btn plus" onclick="changeScore('B',1)" aria-label="隊伍B加分">+</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="status-bar" id="statusBar">點擊 + 開始計分</div>
-
-  <div style="text-align:center;margin-bottom:0.5rem;">
-    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;">發球權歸</div>
-    <div style="display:flex;gap:8px;justify-content:center;">
-      <button class="ctrl-btn" onclick="setServer('A')">→ 隊伍 A 發球</button>
-      <button class="ctrl-btn" onclick="setServer('B')">→ 隊伍 B 發球</button>
-    </div>
-  </div>
-
-  <div class="ctrl-row">
-    <button class="ctrl-btn" onclick="nextGame()"><i class="ti ti-arrow-right" aria-hidden="true"></i> 下一局</button>
-    <button class="ctrl-btn danger" onclick="resetAll()"><i class="ti ti-refresh" aria-hidden="true"></i> 重置全場</button>
-  </div>
-
-  <div class="log-area">
-    <div class="log-title"><i class="ti ti-list" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>得分紀錄</div>
-    <ul class="log-list" id="logList"><li style="color:var(--color-text-secondary);font-size:12px;padding:4px 0;">尚無紀錄</li></ul>
   </div>
 </div>
 
 <script>
-let scores = {A: 0, B: 0};
-let server = null;
-let gameNum = 1;
-let gamesWon = {A: 0, B: 0};
-let gameOver = false;
+let names = ['隊伍 A', '隊伍 B'];
+let games = []; // [{scores:[0,0], server:null, over:false}]
+let gamesWon = [0, 0];
+let currentGame = 0;
 let log = [];
+let editingTeam = null;
+let editingGame = null;
 
-function getWin() { return parseInt(document.getElementById('winScore').value); }
-function getTotalGames() { return parseInt(document.getElementById('totalGames').value); }
-function nameOf(t) { return document.getElementById('name'+t).value || '隊伍 '+t; }
-
-function updateUI() {
-  document.getElementById('scoreA').textContent = scores.A;
-  document.getElementById('scoreB').textContent = scores.B;
-  document.getElementById('dotA').className = 'serving-dot ' + (server==='A'?'active':'inactive');
-  document.getElementById('dotB').className = 'serving-dot ' + (server==='B'?'active':'inactive');
-  document.getElementById('serverLabel').textContent = server ? nameOf(server) : '—';
-  document.getElementById('gameNum').textContent = gameNum;
-
-  let win = getWin(); let total = getTotalGames();
-  let status = '';
-  if (!gameOver) {
-    if (server) {
-      let sName = nameOf(server);
-      status = sName + ' 發球中';
-    }
-    let needLead = (scores.A >= win-1 && scores.B >= win-1) ? 2 : 0;
-    if (needLead > 0) status = '平手！需領先 2 分勝局';
-  }
-  document.getElementById('statusBar').textContent = status;
-
-  let banner = document.getElementById('winnerBanner');
-  if (gameOver) {
-    let leader = gamesWon.A > gamesWon.B ? 'A' : 'B';
-    let needed = Math.ceil(total/2);
-    if (gamesWon[leader] >= needed) {
-      banner.style.display = 'block';
-      banner.textContent = '🏆 ' + nameOf(leader) + ' 贏得比賽！（' + gamesWon.A + ' : ' + gamesWon.B + ' 局）';
-    } else {
-      banner.style.display = 'none';
-    }
-  } else {
-    banner.style.display = 'none';
-  }
+function initGame() {
+  games.push({ scores: [0, 0], server: null, over: false });
 }
 
-function checkWin() {
-  let win = getWin(); let total = getTotalGames();
-  let aWon = scores.A >= win && (scores.A - scores.B) >= 2;
-  let bWon = scores.B >= win && (scores.B - scores.A) >= 2;
-  if (aWon || bWon) {
-    let winner = aWon ? 'A' : 'B';
-    gamesWon[winner]++;
-    let needed = Math.ceil(total/2);
-    let matchWon = gamesWon[winner] >= needed;
-    let msg = nameOf(winner) + ' 贏得第 '+gameNum+' 局' + (matchWon ? '，贏得比賽！' : '');
-    addLog(msg, true);
-    gameOver = true;
-    if (matchWon) {
-      document.getElementById('winnerBanner').style.display = 'block';
-      document.getElementById('winnerBanner').textContent = '🏆 ' + nameOf(winner) + ' 贏得比賽！（' + gamesWon.A + ' : ' + gamesWon.B + ' 局）';
-    }
-    return true;
-  }
-  return false;
-}
+function winScore() { return parseInt(document.getElementById('winScore').value); }
+function totalGames() { return parseInt(document.getElementById('totalGames').value); }
 
-function changeScore(team, delta) {
-  if (gameOver) return;
-  let newVal = scores[team] + delta;
-  if (newVal < 0) return;
-  scores[team] = newVal;
-  if (delta > 0) {
-    addLog(nameOf(team) + ' 得分 → ' + scores.A + ' : ' + scores.B);
-  }
-  checkWin();
-  updateUI();
-}
+function render() {
+  const container = document.getElementById('gamesContainer');
+  container.innerHTML = '';
 
-function setServer(team) {
-  server = team;
-  updateUI();
-}
+  games.forEach((g, gi) => {
+    const card = document.createElement('div');
+    card.className = 'game-card';
 
-function addLog(msg, highlight) {
-  log.unshift({msg, highlight});
-  let ul = document.getElementById('logList');
-  ul.innerHTML = '';
-  if (log.length === 0) { ul.innerHTML = '<li>尚無紀錄</li>'; return; }
-  log.slice(0,30).forEach(e => {
-    let li = document.createElement('li');
-    li.style.color = e.highlight ? '#0C447C' : '';
-    li.style.fontWeight = e.highlight ? '500' : '';
-    li.innerHTML = '<span>' + e.msg + '</span>';
-    ul.appendChild(li);
+    const isWinner = [
+      g.scores[0] >= winScore() && g.scores[0] - g.scores[1] >= 2,
+      g.scores[1] >= winScore() && g.scores[1] - g.scores[0] >= 2
+    ];
+    const winner = isWinner[0] ? 0 : isWinner[1] ? 1 : null;
+
+    card.innerHTML = `
+      <div class="game-header">
+        <span>第 ${gi+1} 局</span>
+        <span class="game-badge">${g.over ? (winner !== null ? names[winner]+' 勝' : '完成') : '進行中'}</span>
+      </div>
+      ${winner !== null ? `<div class="win-banner show">🏆 ${names[winner]} 贏得本局！</div>` : ''}
+      <div class="score-row">
+        ${[0,1].map(t => `
+          <div class="team-block ${g.server===t?'serving':''} ${(winner===t)?'winning':''}">
+            <div class="team-name" onclick="editName(${t},${gi})">${names[t]}</div>
+            <div class="big-score">${g.scores[t]}</div>
+            <div class="score-btns">
+              <button class="btn-score btn-minus" onclick="changeScore(${gi},${t},-1)" ${g.over?'disabled':''}>−</button>
+              <button class="btn-score btn-plus" onclick="changeScore(${gi},${t},1)" ${g.over?'disabled':''}>+</button>
+            </div>
+          </div>
+          ${t===0 ? '<div class="vs-col"><span class="vs-text">VS</span><span class="colon">:</span></div>' : ''}
+        `).join('')}
+      </div>
+      <div class="serve-row">
+        <span class="serve-label">發球</span>
+        <div class="serve-btns">
+          <button class="btn-serve ${g.server===0?'active':''}" onclick="setServer(${gi},0)" ${g.over?'disabled':''}>${names[0]}</button>
+          <button class="btn-serve ${g.server===1?'active':''}" onclick="setServer(${gi},1)" ${g.over?'disabled':''}>${names[1]}</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
   });
+
+  // Summary
+  const sum = document.createElement('div');
+  sum.className = 'summary-card';
+  const matchWinner = gamesWon[0] > gamesWon[1] && gamesWon[0] >= Math.ceil(totalGames()/2) ? 0
+    : gamesWon[1] > gamesWon[0] && gamesWon[1] >= Math.ceil(totalGames()/2) ? 1 : null;
+  sum.innerHTML = `
+    <div class="summary-title">局數戰績</div>
+    <div class="summary-row">
+      <div class="summary-team">
+        <div class="summary-team-name">${names[0]}</div>
+        <div class="summary-wins">${gamesWon[0]}</div>
+      </div>
+      <div class="summary-vs">—</div>
+      <div class="summary-team">
+        <div class="summary-team-name">${names[1]}</div>
+        <div class="summary-wins">${gamesWon[1]}</div>
+      </div>
+    </div>
+    <div class="match-winner ${matchWinner!==null?'show':''}">
+      🏆 ${matchWinner!==null?names[matchWinner]+' 贏得比賽！':''}
+    </div>
+  `;
+  container.appendChild(sum);
+
+  // Log
+  const logCard = document.createElement('div');
+  logCard.className = 'log-card';
+  const logItems = log.length
+    ? log.slice(0,30).map(e=>`
+        <div class="log-item ${e.h?'highlight':''}">
+          <span>${e.msg}</span>
+          <span class="log-time">${e.t}</span>
+        </div>`).join('')
+    : '<div class="log-empty">尚無得分紀錄</div>';
+  logCard.innerHTML = `
+    <div class="log-head"><span>得分紀錄</span><span class="log-clear" onclick="clearLog()">清除</span></div>
+    <div class="log-list">${logItems}</div>
+  `;
+  container.appendChild(logCard);
+
+  // next btn
+  const btnNext = document.getElementById('btnNext');
+  const canNext = games.length < totalGames() && games[games.length-1].over;
+  btnNext.disabled = !canNext;
+  btnNext.style.opacity = canNext ? '1' : '.4';
+
+  document.getElementById('matchStatus').textContent =
+    matchWinner !== null ? names[matchWinner]+' 勝' : `第 ${games.length} 局`;
+}
+
+function now() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+function addLog(msg, highlight=false) {
+  log.unshift({ msg, h: highlight, t: now() });
+}
+
+function changeScore(gi, team, delta) {
+  const g = games[gi];
+  if (g.over) return;
+  const nv = g.scores[team] + delta;
+  if (nv < 0) return;
+  g.scores[team] = nv;
+  if (delta > 0) addLog(`${names[team]} 得分 → ${g.scores[0]} : ${g.scores[1]}`);
+  checkWin(gi);
+  render();
+}
+
+function checkWin(gi) {
+  const g = games[gi];
+  const ws = winScore();
+  const won = [
+    g.scores[0] >= ws && g.scores[0] - g.scores[1] >= 2,
+    g.scores[1] >= ws && g.scores[1] - g.scores[0] >= 2
+  ];
+  if ((won[0] || won[1]) && !g.over) {
+    g.over = true;
+    const w = won[0] ? 0 : 1;
+    gamesWon[w]++;
+    addLog(`${names[w]} 贏得第 ${gi+1} 局！`, true);
+  }
+}
+
+function checkAllWins() { games.forEach((_, i) => checkWin(i)); render(); }
+
+function setServer(gi, team) {
+  if (games[gi].over) return;
+  games[gi].server = team;
+  render();
 }
 
 function nextGame() {
-  if (gamesWon.A + gamesWon.B >= getTotalGames()) return;
-  scores = {A:0, B:0};
-  gameNum++;
-  gameOver = false;
-  server = null;
-  addLog('--- 第 '+gameNum+' 局開始 ---', false);
-  updateUI();
+  if (games.length >= totalGames()) return;
+  if (!games[games.length-1].over) return;
+  initGame();
+  addLog(`--- 第 ${games.length} 局開始 ---`);
+  render();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.game-card');
+    cards[cards.length-1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function confirmReset() {
+  if (confirm('確定要重置全場嗎？')) resetAll();
 }
 
 function resetAll() {
-  scores = {A:0, B:0};
-  gamesWon = {A:0, B:0};
-  server = null;
-  gameNum = 1;
-  gameOver = false;
+  games = [];
+  gamesWon = [0, 0];
   log = [];
-  document.getElementById('winnerBanner').style.display = 'none';
-  document.getElementById('logList').innerHTML = '<li style="color:var(--color-text-secondary);font-size:12px;padding:4px 0;">尚無紀錄</li>';
-  updateUI();
+  initGame();
+  render();
 }
 
-updateUI();
+function editName(team, gi) {
+  editingTeam = team;
+  editingGame = gi;
+  document.getElementById('overlayTitle').textContent = `修改${team===0?'隊伍 A':'隊伍 B'}名稱`;
+  document.getElementById('overlayInput').value = names[team];
+  document.getElementById('nameOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('overlayInput').focus(), 100);
+}
+
+function saveOverlay() {
+  const val = document.getElementById('overlayInput').value.trim();
+  if (val) names[editingTeam] = val;
+  closeOverlay();
+  render();
+}
+
+function closeOverlay() {
+  document.getElementById('nameOverlay').classList.remove('show');
+}
+
+function clearLog() { log = []; render(); }
+
+document.getElementById('overlayInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveOverlay();
+  if (e.key === 'Escape') closeOverlay();
+});
+
+// init
+initGame();
+render();
 </script>
+</body>
+</html>
